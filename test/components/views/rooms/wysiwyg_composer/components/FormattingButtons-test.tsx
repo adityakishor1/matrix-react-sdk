@@ -21,6 +21,7 @@ import { ActionState, ActionTypes, AllActionStates, FormattingFunctions } from "
 
 import { FormattingButtons } from "../../../../../../src/components/views/rooms/wysiwyg_composer/components/FormattingButtons";
 import * as LinkModal from "../../../../../../src/components/views/rooms/wysiwyg_composer/components/LinkModal";
+import { clearAllModals } from "../../../../../test-utils";
 
 const mockWysiwyg = {
     bold: jest.fn(),
@@ -72,8 +73,10 @@ const classes = {
 };
 
 describe("FormattingButtons", () => {
-    afterEach(() => {
+    afterEach(async () => {
         jest.resetAllMocks();
+
+        await clearAllModals();
     });
 
     it("Each button should not have active class when enabled", () => {
