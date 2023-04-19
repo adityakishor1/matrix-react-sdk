@@ -49,11 +49,11 @@ describe("UserOnboardingPage", () => {
     beforeEach(() => {
         stubClient();
         jest.useFakeTimers();
+        jest.spyOn(SdkConfig, "get").mockRestore();
     });
 
-    afterEach(() => {
+    afterAll(() => {
         jest.useRealTimers();
-        jest.restoreAllMocks();
     });
 
     describe("when the user registered before the cutoff date", () => {
