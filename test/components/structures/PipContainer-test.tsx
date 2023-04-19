@@ -136,7 +136,6 @@ describe("PipContainer", () => {
         cleanup();
         await Promise.all([CallStore.instance, WidgetMessagingStore.instance].map(resetAsyncStoreWithClient));
         client.reEmitter.stopReEmitting(room, [RoomStateEvent.Events]);
-        jest.restoreAllMocks();
     });
 
     const renderPip = () => {
