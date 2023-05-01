@@ -23,7 +23,6 @@ import { CryptoEvent } from "matrix-js-sdk/src/crypto";
 import { IKeyBackupInfo } from "matrix-js-sdk/src/crypto/keybackup";
 
 import DeviceListener from "../src/DeviceListener";
-import { MatrixClientPeg } from "../src/MatrixClientPeg";
 import * as SetupEncryptionToast from "../src/toasts/SetupEncryptionToast";
 import * as UnverifiedSessionToast from "../src/toasts/UnverifiedSessionToast";
 import * as BulkUnverifiedSessionsToast from "../src/toasts/BulkUnverifiedSessionsToast";
@@ -99,13 +98,13 @@ describe("DeviceListener", () => {
             downloadKeys: jest.fn(),
             isRoomEncrypted: jest.fn(),
             getClientWellKnown: jest.fn(),
+            getDevice: jest.fn().mockReturnValue({}),
             getDeviceId: jest.fn().mockReturnValue(deviceId),
             setAccountData: jest.fn(),
             getAccountData: jest.fn(),
             deleteAccountData: jest.fn(),
             getCrypto: jest.fn().mockReturnValue(mockCrypto),
         });
-        jest.spyOn(MatrixClientPeg, "get").mockReturnValue(mockClient);
         jest.spyOn(SettingsStore, "getValue").mockReturnValue(false);
         mocked(isBulkUnverifiedDeviceReminderSnoozed).mockClear().mockReturnValue(false);
     });

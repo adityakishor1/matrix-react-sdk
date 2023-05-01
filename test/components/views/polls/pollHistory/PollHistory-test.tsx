@@ -205,7 +205,7 @@ describe("<PollHistory />", () => {
             .mockReturnValueOnce("test-pagination-token-3")
             .mockReturnValueOnce("test-pagination-token-4");
 
-        const deferredPaginations: IDeferred[] = [];
+        const deferredPaginations: IDeferred<boolean>[] = [];
         mockClient.paginateEventTimeline.mockImplementation((timeline, opts) => {
             const deferred = defer<boolean>();
             deferredPaginations.push(deferred);

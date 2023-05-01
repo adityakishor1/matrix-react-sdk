@@ -58,11 +58,8 @@ describe("<WidgetContextMenu />", () => {
 
     beforeEach(() => {
         onFinished = jest.fn();
+        jest.spyOn(ModuleRunner.instance, "invoke").mockRestore();
         jest.spyOn(WidgetUtils, "canUserModifyWidgets").mockReturnValue(true);
-    });
-
-    afterEach(() => {
-        jest.restoreAllMocks();
     });
 
     function getComponent(props: Partial<ComponentProps<typeof WidgetContextMenu>> = {}): JSX.Element {

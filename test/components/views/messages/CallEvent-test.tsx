@@ -82,6 +82,7 @@ describe("CallEvent", () => {
         );
 
         MockedCall.create(room, "1");
+        jest.spyOn(CallStore.instance, "getCall").mockRestore();
         const maybeCall = CallStore.instance.getCall(room.roomId);
         if (!(maybeCall instanceof MockedCall)) throw new Error("Failed to create call");
         call = maybeCall;
@@ -98,7 +99,6 @@ describe("CallEvent", () => {
         WidgetMessagingStore.instance.stopMessaging(widget, room.roomId);
         await Promise.all([CallStore.instance, WidgetMessagingStore.instance].map(resetAsyncStoreWithClient));
         client.reEmitter.stopReEmitting(room, [RoomStateEvent.Events]);
-        jest.restoreAllMocks();
     });
 
     const renderEvent = () => {
