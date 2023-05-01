@@ -55,6 +55,7 @@ import VoipUserMapper from "../../../src/VoipUserMapper";
 import WidgetUtils from "../../../src/utils/WidgetUtils";
 import { WidgetType } from "../../../src/widgets/WidgetType";
 import WidgetStore from "../../../src/stores/WidgetStore";
+import * as AvatarLogic from "../../../src/Avatar";
 
 const RoomView = wrapInMatrixClientContext(_RoomView);
 
@@ -89,6 +90,7 @@ describe("RoomView", () => {
         stores.rightPanelStore.useUnitTestClient(cli);
 
         jest.spyOn(VoipUserMapper.sharedInstance(), "getVirtualRoomForRoom").mockResolvedValue(undefined);
+        jest.spyOn(AvatarLogic, "defaultAvatarUrlForString").mockRestore();
     });
 
     afterEach(() => {
@@ -126,42 +128,6 @@ describe("RoomView", () => {
                     resizeNotifier={new ResizeNotifier()}
                     forceTimeline={false}
                     wrappedRef={ref as any}
-                />
-            </SDKContext.Provider>,
-        );
-        await flushPromises();
-        return roomView;
-    };
-
-    const renderRoomView = async (): Promise<ReturnType<typeof render>> => {
-        if (stores.roomViewStore.getRoomId() !== room.roomId) {
-            const switchedRoom = new Promise<void>((resolve) => {
-                const subFn = () => {
-                    if (stores.roomViewStore.getRoomId()) {
-                        stores.roomViewStore.off(UPDATE_EVENT, subFn);
-                        resolve();
-                    }
-                };
-                stores.roomViewStore.on(UPDATE_EVENT, subFn);
-            });
-
-            defaultDispatcher.dispatch<ViewRoomPayload>({
-                action: Action.ViewRoom,
-                room_id: room.roomId,
-                metricsTrigger: undefined,
-            });
-
-            await switchedRoom;
-        }
-
-        const roomView = render(
-            <SDKContext.Provider value={stores}>
-                <RoomView
-                    // threepidInvite should be optional on RoomView props
-                    // it is treated as optional in RoomView
-                    threepidInvite={undefined as any}
-                    resizeNotifier={new ResizeNotifier()}
-                    forceTimeline={false}
                     onRegistered={jest.fn()}
                 />
             </SDKContext.Provider>,
@@ -169,6 +135,7 @@ describe("RoomView", () => {
         await flushPromises();
         return roomView;
     };
+
     const getRoomViewInstance = async (): Promise<_RoomView> => {
         const ref = createRef<_RoomView>();
         await mountRoomView(ref);
@@ -265,7 +232,7 @@ describe("RoomView", () => {
 
     describe("with virtual rooms", () => {
         it("checks for a virtual room on initial load", async () => {
-            const { container } = await renderRoomView();
+            const { container } = await mountRoomView();
             expect(VoipUserMapper.sharedInstance().getVirtualRoomForRoom).toHaveBeenCalledWith(room.roomId);
 
             // quick check that rendered without error
@@ -273,7 +240,7 @@ describe("RoomView", () => {
         });
 
         it("checks for a virtual room on room event", async () => {
-            await renderRoomView();
+            await mountRoomView();
             expect(VoipUserMapper.sharedInstance().getVirtualRoomForRoom).toHaveBeenCalledWith(room.roomId);
 
             cli.emit(ClientEvent.Room, room);
@@ -309,19 +276,24 @@ describe("RoomView", () => {
 
         beforeEach(async () => {
             localRoom = room = await createDmLocalRoom(cli, [new DirectoryMember({ user_id: "@user:example.com" })]);
+            // some other test messes with the canvas context used by this fn
+            // just mock it for stable snapshots
+            jest.spyOn(AvatarLogic, "defaultAvatarUrlForString").mockReturnValue("data:image/png;base64,00");
+
             rooms.set(localRoom.roomId, localRoom);
             cli.store.storeRoom(room);
         });
 
         it("should remove the room from the store on unmount", async () => {
-            const { unmount } = await renderRoomView();
+            const { unmount } = await mountRoomView();
             unmount();
             expect(cli.store.removeRoom).toHaveBeenCalledWith(room.roomId);
         });
 
         describe("in state NEW", () => {
             it("should match the snapshot", async () => {
-                const { container } = await renderRoomView();
+                console.log("NEW", room.roomId);
+                const { container } = await mountRoomView();
                 expect(container).toMatchSnapshot();
             });
 
@@ -346,7 +318,7 @@ describe("RoomView", () => {
                 });
 
                 it("should match the snapshot", async () => {
-                    const { container } = await renderRoomView();
+                    const { container } = await mountRoomView();
                     expect(container).toMatchSnapshot();
                 });
             });
@@ -354,7 +326,7 @@ describe("RoomView", () => {
 
         it("in state CREATING should match the snapshot", async () => {
             localRoom.state = LocalRoomState.CREATING;
-            const { container } = await renderRoomView();
+            const { container } = await mountRoomView();
             expect(container).toMatchSnapshot();
         });
 
@@ -364,13 +336,13 @@ describe("RoomView", () => {
             });
 
             it("should match the snapshot", async () => {
-                const { container } = await renderRoomView();
+                const { container } = await mountRoomView();
                 expect(container).toMatchSnapshot();
             });
 
             it("clicking retry should set the room state to new dispatch a local room event", async () => {
                 jest.spyOn(defaultDispatcher, "dispatch");
-                const { getByText } = await renderRoomView();
+                const { getByText } = await mountRoomView();
                 fireEvent.click(getByText("Retry"));
                 expect(localRoom.state).toBe(LocalRoomState.NEW);
                 expect(defaultDispatcher.dispatch).toHaveBeenCalledWith({
@@ -390,7 +362,7 @@ describe("RoomView", () => {
             jest.spyOn(DMRoomMap.shared(), "getUserIdForRoomId").mockReturnValue(cli.getSafeUserId());
             jest.spyOn(DMRoomMap.shared(), "getRoomIds").mockReturnValue(new Set([room.roomId]));
             mocked(cli).isRoomEncrypted.mockReturnValue(true);
-            await renderRoomView();
+            await mountRoomView();
         });
 
         it("should render the »waiting for third-party« view", () => {

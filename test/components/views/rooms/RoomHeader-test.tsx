@@ -57,6 +57,7 @@ import { WidgetMessagingStore } from "../../../../src/stores/widgets/WidgetMessa
 import WidgetUtils from "../../../../src/utils/WidgetUtils";
 import { ElementWidgetActions } from "../../../../src/stores/widgets/ElementWidgetActions";
 import MediaDeviceHandler, { MediaDeviceKindEnum } from "../../../../src/MediaDeviceHandler";
+import * as AvatarLogic from "../../../../src/Avatar";
 
 describe("RoomHeader", () => {
     let client: Mocked<MatrixClient>;
@@ -114,6 +115,10 @@ describe("RoomHeader", () => {
 
         DMRoomMap.makeShared();
         jest.spyOn(DMRoomMap.shared(), "getUserIdForRoomId").mockReturnValue(carol.userId);
+
+        // some other test messes with the canvas context used by this fn
+        // just mock it for stable snapshots
+        jest.spyOn(AvatarLogic, "defaultAvatarUrlForString").mockClear().mockReturnValue("data:image/png;base64,00");
     });
 
     afterEach(async () => {
