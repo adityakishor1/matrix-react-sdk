@@ -35,6 +35,7 @@ import { RoomPermalinkCreator } from "../../../../../src/utils/permalinks/Permal
 import defaultDispatcher from "../../../../../src/dispatcher/dispatcher";
 import { Action } from "../../../../../src/dispatcher/actions";
 import MatrixClientContext from "../../../../../src/contexts/MatrixClientContext";
+import { defer, IDeferred } from "matrix-js-sdk/src/utils";
 
 describe("<PollHistory />", () => {
     // 14.03.2022 16:15
@@ -201,14 +202,27 @@ describe("<PollHistory />", () => {
         jest.spyOn(liveTimeline, "getPaginationToken")
             .mockReturnValueOnce("test-pagination-token-1")
             .mockReturnValueOnce("test-pagination-token-2")
-            .mockReturnValueOnce("test-pagination-token-3");
+            .mockReturnValueOnce("test-pagination-token-3")
+            .mockReturnValueOnce("test-pagination-token-4");
+
+        const deferredPaginations: IDeferred[] = [];
+        mockClient.paginateEventTimeline.mockImplementation((timeline, opts) => {
+            const deferred = defer<boolean>();
+            deferredPaginations.push(deferred);
+            return deferred.promise;
+        });
 
         const { getByText } = getComponent();
         await flushPromises();
 
+        deferredPaginations.pop().resolve(true);
+        await flushPromises();
+
         expect(mockClient.paginateEventTimeline).toHaveBeenCalledTimes(1);
 
-        expect(getByText("There are no active polls. Load more polls to view polls for previous months")).toBeTruthy();
+        expect(
+            getByText("There are no active polls. Load more polls to view polls for previous months"),
+        ).toBeInTheDocument();
 
         fireEvent.click(getByText("Load more polls"));
 
@@ -217,6 +231,7 @@ describe("<PollHistory />", () => {
         // load more polls button still in UI, with loader
         expect(getByText("Load more polls")).toMatchSnapshot();
 
+        deferredPaginations.pop().resolve(true);
         await flushPromises();
 
         // no more spinner
