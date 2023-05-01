@@ -1433,7 +1433,6 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                     <AccessibleButton
                         kind="primary"
                         onClick={this.transferCall}
-                        className="mx_InviteDialog_transferButton"
                         disabled={!hasSelection && this.state.dialPadValue === ""}
                     >
                         {_t("Transfer")}
@@ -1495,7 +1494,7 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
 
         let dialogContent;
         if (this.props.kind === InviteKind.CallTransfer) {
-            const tabs: NonEmptyArray<Tab> = [
+            const tabs: NonEmptyArray<Tab<TabId>> = [
                 new Tab(TabId.UserDirectory, _td("User Directory"), "mx_InviteDialog_userDirectoryIcon", usersSection),
             ];
 

@@ -308,7 +308,11 @@ export default class MessagePanel extends React.Component<IProps, IState> {
             this.calculateRoomMembersCount();
         }
 
-        if (prevProps.readMarkerVisible && this.props.readMarkerEventId !== prevProps.readMarkerEventId) {
+        if (
+            prevProps.readMarkerVisible &&
+            prevProps.readMarkerEventId &&
+            this.props.readMarkerEventId !== prevProps.readMarkerEventId
+        ) {
             const ghostReadMarkers = this.state.ghostReadMarkers;
             ghostReadMarkers.push(prevProps.readMarkerEventId);
             this.setState({
@@ -883,6 +887,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
 
             const existingReceipts = receiptsByEvent.get(lastShownEventId) || [];
             const newReceipts = this.getReadReceiptsForEvent(event);
+            if (!newReceipts) continue;
             receiptsByEvent.set(lastShownEventId, existingReceipts.concat(newReceipts));
 
             // Record these receipts along with their last shown event ID for
@@ -905,7 +910,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
             if (receiptsByUserId.get(userId)) {
                 continue;
             }
-            const { lastShownEventId, receipt } = this.readReceiptsByUserId.get(userId);
+            const { lastShownEventId, receipt } = this.readReceiptsByUserId.get(userId)!;
             const existingReceipts = receiptsByEvent.get(lastShownEventId) || [];
             receiptsByEvent.set(lastShownEventId, existingReceipts.concat(receipt));
             receiptsByUserId.set(userId, { lastShownEventId, receipt });
@@ -1218,7 +1223,7 @@ class CreationGrouper extends BaseGrouper {
                 key="roomcreationsummary"
                 events={this.events}
                 onToggle={panel.onHeightChanged} // Update scroll state
-                summaryMembers={[ev.sender]}
+                summaryMembers={ev.sender ? [ev.sender] : undefined}
                 summaryText={summaryText}
                 layout={this.panel.props.layout}
             >
